@@ -1,4 +1,6 @@
-σ_o = 1.0
+include("../examples/tent.jl")
+using JLD
+σ_o = 0.001
 function p_y_g_x(a)
     return 1/sqrt(2π)/σ_o*exp(-0.5*a*a/σ_o/σ_o)
 end
@@ -31,8 +33,26 @@ function sir(y,x,N_thr=10)
 		    end
 			x .= new_pts
 	    end
+		x .= next.(x,s)
     end
+	return x, w
 end
-						
+function assimilate()
+	Np = 100
+	K = 10
+	x = rand(Np)
+
+	x_true = ones(K)
+	x0_true = rand()
+	x_true[1] = x0_true
+	y = zeros(K)
+	for i = 1:K
+	    x_true[i] = next(x_true[i-1], s)
+		y[i] = x_true[i] + σ_0*σ_0*randn()
+	end
+	x, w = sir(y, 100) 
+	return x, w, x_true[K]     
+end
+
 
 
