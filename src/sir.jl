@@ -1,6 +1,6 @@
 include("../examples/lorenz.jl")
 using JLD
-σ_o = 1.0
+σ_o = 0.1
 function p_y_g_x(a)
 		term =  log(1/sqrt(2π)/σ_o) 
 		return sum(term .- 0.5*a.*a/σ_o/σ_o)
@@ -27,8 +27,6 @@ function sir(y,x_ip,s,N_thr=10)
 		w ./= sum(w)
 
 		N_eff = 1.0/sum(w.*w)
-        
-		@show minimum(w), maximum(w), N_eff
 		if (N_eff < N_thr)
 	        #resample
             # multinomial resampling
@@ -44,24 +42,22 @@ function sir(y,x_ip,s,N_thr=10)
 		        end
 		    end
 			x .= new_pts
-			@show x
 	    end
 		for i = 1:N_p
 		    x[:,i] .= next(x[:,i],s)
 		end
 
-		@show x
 		x_trj[:,:,k] .= x
 		w_trj[:,k] .= w
     end
 	return x_trj, w_trj
 end
-function assimilate()
+function assimilate(K, Np)
     # Often much larger.
-	Np = 1000
-	K = 10
+	#Np = 1000
+	#K = 1000
 	x = rand(d,Np)
-	s = 0.1
+	s = 0.01
 	x_true = ones(d,K)
 	x0_true = 2*pi*rand(d)
 	Nrunup = 1000
@@ -82,7 +78,7 @@ function assimilate()
 	N_thr = 20
 	# store trajectory of w and x.
 	x_trj, w_trj = sir(y, x, s, N_thr) 
-	return x_trj, w_trj, x_true  
+	return x_trj, w_trj, y 
 end
 
 
