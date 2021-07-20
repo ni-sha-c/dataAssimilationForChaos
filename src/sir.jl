@@ -1,6 +1,6 @@
 include("../examples/lorenz.jl")
 using JLD
-σ_o = 0.1
+σ_o = 1.0
 function p_y_g_x(a)
 		term =  log(1/sqrt(2π)/σ_o) 
 		return sum(term .- 0.5*a.*a/σ_o/σ_o)
@@ -57,7 +57,7 @@ function assimilate(K, Np)
 	#Np = 1000
 	#K = 1000
 	x = rand(d,Np)
-	s = 0.01
+	s = 0.1
 	x_true = ones(d,K)
 	x0_true = 2*pi*rand(d)
 	Nrunup = 1000
