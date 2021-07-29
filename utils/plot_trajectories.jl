@@ -11,7 +11,7 @@ function plot_trj()
 	n_t = 10
 	trj_len = size(x_true)[1] - n_t + 1
 	time_arr = LinRange(0, trj_len -1, trj_len)
-	time_arr .= dt*time_arr
+	time_arr = dt*time_arr
 
 	for i = 1:d
 		fig, ax = subplots()
@@ -23,6 +23,7 @@ function plot_trj()
 		ax.xaxis.set_tick_params(labelsize=28)
 		ax.yaxis.set_tick_params(labelsize=28)
 		ax.set_xlabel("Time",fontsize=28)
+		ax.set_title("# particles = $(Np)", fontsize=28)
 	end
 end
 function plot_weight_stats()
@@ -33,10 +34,6 @@ function plot_weight_stats()
 	ax.legend(fontsize=28)
 	ax.xaxis.set_tick_params(labelsize=28)
 	ax.yaxis.set_tick_params(labelsize=28)
-
-	
-
-
 end
 
 

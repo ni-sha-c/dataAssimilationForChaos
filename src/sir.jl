@@ -1,13 +1,17 @@
 include("../examples/lorenz.jl")
 using JLD
 σ_o = 0.1
-function p_y_g_x(a)
+function p_y_g_x(a::Array{Float64,1})
         term =  log(1/sqrt(2π)/σ_o) 
         return sum(term .- 0.5*a.*a/σ_o/σ_o)
 end
 function obs(x)
     return x
 end
+function obs1(x)
+	return x[3]
+end
+
 function resample(x, w)
     # multinomial resampling
     cdfw = cumsum(w)
