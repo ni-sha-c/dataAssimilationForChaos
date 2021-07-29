@@ -1,15 +1,15 @@
 include("../examples/lorenz.jl")
 using JLD
 σ_o = 0.1
-function p_y_g_x(a::Array{Float64,1})
+function p_y_g_x(a)
         term =  log(1/sqrt(2π)/σ_o) 
         return sum(term .- 0.5*a.*a/σ_o/σ_o)
 end
 function obs(x)
-    return x
+    return x .+ σ_o*randn(d)
 end
 function obs1(x)
-	return x[3]
+    return x[3] + σ_o*randn()
 end
 
 function resample(x, w)
@@ -28,7 +28,7 @@ function resample(x, w)
     end
     return new_pts
 end
-function sir(y,x_ip,s,N_thr=10)
+function sir(y,x_ip,s,obs_fun,N_thr=10)
     K = size(y)[2]
     N_p = size(x_ip)[2]
     w_trj = zeros(N_p, K)
@@ -39,7 +39,7 @@ function sir(y,x_ip,s,N_thr=10)
     x = copy(x_ip)
     for k = 1:K
         for i = 1: N_p 
-                logwi = log(w[i]) + p_y_g_x(y[:,k] .- obs(x[:,i]))
+                logwi = log(w[i]) + p_y_g_x(y[:,k] .- obs_fun(x[:,i]))
                 w[i] = exp(logwi)
         end
 
@@ -76,15 +76,15 @@ function assimilate(K, Np)
         end
     end
     x_true[:,1] .= x0_true
-    y = zeros(d,K)
-	y[:,1] = obs(x0_true) + σ_o*randn(d)
+    y = zeros(1,K)
+	y[:,1] .= obs1(x0_true) 
     for i = 2:K
         x_true[:,i] = next(x_true[:,i-1], s)
-        y[:,i] = obs(x_true[:,i]) + σ_o*randn(d)
+        y[:,i] .= obs1(x_true[:,i]) 
     end
     N_thr = 20
     # store trajectory of w and x.
-    x_trj, w_trj = sir(y, x, s, N_thr) 
+    x_trj, w_trj = sir(y, x, s, obs1, N_thr) 
     return x_trj, w_trj, y 
 end
 
