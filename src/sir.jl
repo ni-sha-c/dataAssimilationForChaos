@@ -1,12 +1,28 @@
 include("../examples/lorenz.jl")
 using JLD
-σ_o = 1.0
+σ_o = 0.1
 function p_y_g_x(a)
         term =  log(1/sqrt(2π)/σ_o) 
         return sum(term .- 0.5*a.*a/σ_o/σ_o)
 end
 function obs(x)
     return x
+end
+function resample(x, w)
+    # multinomial resampling
+    cdfw = cumsum(w)
+    new_pts = similar(x)
+	N_p = size(w)[1]
+    for j = 1:N_p
+        r = rand()
+        for i = 1:N_p
+            if cdfw[i] >= r
+                new_pts[:,j] .= x[:,i]
+                break
+            end
+        end
+    end
+    return new_pts
 end
 function sir(y,x_ip,s,N_thr=10)
     K = size(y)[2]
@@ -16,7 +32,6 @@ function sir(y,x_ip,s,N_thr=10)
 
 
     w = ones(N_p)./N_p
-    new_pts = similar(x_ip)
     x = copy(x_ip)
     for k = 1:K
         for i = 1: N_p 
@@ -28,21 +43,8 @@ function sir(y,x_ip,s,N_thr=10)
 
         N_eff = 1.0/sum(w.*w)
         if (N_eff < N_thr)
-            #resample
-            # multinomial resampling
-            cdfw = cumsum(w)
-            new_pts .= similar(x)
-            for j = 1:N_p
-                r = rand()
-                for i = 1:N_p
-                    if cdfw[i] >= r
-                        new_pts[:,j] .= x[:,i]
-                        break
-                    end
-                end
-            end
-            x .= new_pts
-        end
+			x .= resample(x, w)
+		end
         for i = 1:N_p
             x[:,i] .= next(x[:,i],s)
         end
@@ -57,10 +59,10 @@ function assimilate(K, Np)
     #Np = 1000
     #K = 1000
     x = rand(d,Np)
-    s = 0.1
+    s = 0.
     x_true = ones(d,K)
-    x0_true = 2*pi*rand(d)
-    Nrunup = 1000
+    x0_true = rand(d)
+    Nrunup = 2000
     for i = 1:Nrunup
         x0_true = next(x0_true, 0.0)
     end
@@ -71,6 +73,7 @@ function assimilate(K, Np)
     end
     x_true[:,1] .= x0_true
     y = zeros(d,K)
+	y[:,1] = obs(x0_true) + σ_o*randn(d)
     for i = 2:K
         x_true[:,i] = next(x_true[:,i-1], s)
         y[:,i] = obs(x_true[:,i]) + σ_o*randn(d)

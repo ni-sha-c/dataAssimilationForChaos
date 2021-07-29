@@ -1,4 +1,4 @@
-dt = 0.002
+dt = 0.01
 s = [10.0, 28.0, 8/3]
 d = 3
 function flow(u::Array{Float64,1})
