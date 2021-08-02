@@ -27,34 +27,40 @@ function resample(x, w)
     end
     return new_pts
 end
-function sir(y,x_ip,obs_fun,σ_o,σ_d,N_thr=10)
+function sir(y,x_ip,Δ,obs_fun,Ny,σ_o,σ_d,N_thr=10)
     K = size(y)[2]
     N_p = size(x_ip)[2]
-    w_trj = zeros(N_p, K)
-    x_trj = zeros(d, N_p, K)
+    
+    N_y = K*Δ
+	w_trj = zeros(N_p, N_y)
+    x_trj = zeros(d, N_p, N_y)
 
 
     w = ones(N_p)./N_p
     x = copy(x_ip)
-    for k = 1:K
-        for i = 1: N_p 
-                logwi = log(w[i]) + p_y_g_x(y[:,k] .- obs_fun(x[:,i],σ_o))
+	count = 0
+	j = 0
+    for k = 1:N_y
+        if k % Δ == 0
+		    for i = 1: N_p 
+                logwi = log(w[i]) + p_y_g_x(y[:,j] .- obs_fun(x[:,i],σ_o))
                 w[i] = exp(logwi)
-        end
-
-        w ./= sum(w)
-
-        N_eff = 1.0/sum(w.*w)
-        if (N_eff < N_thr)
-			x .= resample(x, w)
+			end
+            w ./= sum(w)
+            N_eff = 1.0/sum(w.*w)
+            if (N_eff < N_thr)
+				count = count + 1
+			    x .= resample(x, w)
+		    end
+			j = j + 1
 		end
         for i = 1:N_p
             x[:,i] .= next(x[:,i],σ_d)
         end
-
         x_trj[:,:,k] .= x
         w_trj[:,k] .= w
     end
+	@show "Resampling was triggered ", count, " times out of ", N_y
     return x_trj, w_trj
 end
 """
@@ -109,7 +115,7 @@ function assimilate(K, Np, σ_o, σ_d,
 		end
     end
     # store trajectory of w and x.
-    x_trj, w_trj = sir(y, x, obsfun, σ_o, σ_d, N_th) 
+    x_trj, w_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, N_th) 
     return x_trj, w_trj, y 
 end
 
