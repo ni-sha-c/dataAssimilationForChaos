@@ -1,14 +1,13 @@
 include("../examples/lorenz.jl")
 using JLD
-σ_o = 0.1
-function p_y_g_x(a)
+function p_y_g_x(a, σ_o)
         term =  log(1/sqrt(2π)/σ_o) 
         return sum(term .- 0.5*a.*a/σ_o/σ_o)
 end
-function obs(x)
+function obs(x, σ_o)
     return x .+ σ_o*randn(d)
 end
-function obs1(x)
+function obs1(x, σ_o)
     return x[3] + σ_o*randn()
 end
 
@@ -28,7 +27,7 @@ function resample(x, w)
     end
     return new_pts
 end
-function sir(y,x_ip,s,obs_fun,N_thr=10)
+function sir(y,x_ip,obs_fun,σ_o,σ_d,N_thr=10)
     K = size(y)[2]
     N_p = size(x_ip)[2]
     w_trj = zeros(N_p, K)
@@ -68,6 +67,7 @@ Perform `K` data assimilation steps using an SIR algorithm with `Np` particles. 
 	2. `σ_d`: std of Gaussian dynamics noise, which is added to every component and at every timestep.
 	3. `Δ`: inter-observation number of timesteps, e.g., if `Δ = 5,` observations are assumed available at timestep `0,5,10,...,5(K-1)`.
 	4. `Nth`: number of particles below which to resample
+	5. `obs`: observation map, e.g., `obs(x) = x[3]`
 
 Outputs:
 
@@ -77,13 +77,16 @@ Outputs:
 
 # Examples
 ```julia-repl
-julia> x, w = assimilate(500, 1000, 0.1, 0.1, 1)
+julia> x, w = assimilate(500, 1000, 0.1, 0.1, 1, obs)
 ```
 """
 function assimilate(K, Np, σ_o, σ_d, 
-				   Δ)
+				   Δ, Nth, obsfun)
     x = rand(d,Np)
-    x_true = ones(d,K)
+	Ny = K*Δ
+	ytest = obsfun(rand(d),σ_o)
+	dy = size(ytest)[1]
+    x_true = ones(d,Ny)
     x0_true = rand(d)
     Nrunup = 2000
     for i = 1:Nrunup
@@ -91,21 +94,25 @@ function assimilate(K, Np, σ_o, σ_d,
     end
     for i = 1:Nrunup
         for j = 1:Np
-            x[:,j] = next(x[:,j],s)
+            x[:,j] = next(x[:,j],σ_d)
         end
     end
     x_true[:,1] .= x0_true
-    y = zeros(1,K)
-	y[:,1] .= obs1(x0_true) 
-    for i = 2:K
+    y = zeros(dy,Ny)
+	y[:,1] .= obsfun(x0_true, σ_o) 
+	k = 0
+    for i = 2:Ny
         x_true[:,i] = next(x_true[:,i-1], s)
-        y[:,i] .= obs1(x_true[:,i]) 
+		if i % Δ == 0
+        	y[:,k] .= obsfun(x_true[:,i], σ_o)
+			k = k+1
+		end
     end
-    N_thr = 20
     # store trajectory of w and x.
-    x_trj, w_trj = sir(y, x, s, obs1, N_thr) 
+    x_trj, w_trj = sir(y, x, obsfun, σ_o, σ_d, N_th) 
     return x_trj, w_trj, y 
 end
+
 
 
 
