@@ -38,7 +38,7 @@ function sir(y,x_ip,obs_fun,σ_o,σ_d,N_thr=10)
     x = copy(x_ip)
     for k = 1:K
         for i = 1: N_p 
-                logwi = log(w[i]) + p_y_g_x(y[:,k] .- obs_fun(x[:,i]))
+                logwi = log(w[i]) + p_y_g_x(y[:,k] .- obs_fun(x[:,i],σ_o))
                 w[i] = exp(logwi)
         end
 
@@ -49,7 +49,7 @@ function sir(y,x_ip,obs_fun,σ_o,σ_d,N_thr=10)
 			x .= resample(x, w)
 		end
         for i = 1:N_p
-            x[:,i] .= next(x[:,i],s)
+            x[:,i] .= next(x[:,i],σ_d)
         end
 
         x_trj[:,:,k] .= x
@@ -102,7 +102,7 @@ function assimilate(K, Np, σ_o, σ_d,
 	y[:,1] .= obsfun(x0_true, σ_o) 
 	k = 0
     for i = 2:Ny
-        x_true[:,i] = next(x_true[:,i-1], s)
+        x_true[:,i] = next(x_true[:,i-1], σ_d)
 		if i % Δ == 0
         	y[:,k] .= obsfun(x_true[:,i], σ_o)
 			k = k+1
