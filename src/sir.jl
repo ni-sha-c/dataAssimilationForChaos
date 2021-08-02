@@ -8,7 +8,7 @@ function obs(x, σ_o)
     return x .+ σ_o*randn(d)
 end
 function obs1(x, σ_o)
-    return x[3] + σ_o*randn()
+	return [x[3] + σ_o*randn()]
 end
 
 function resample(x, w)
@@ -27,11 +27,13 @@ function resample(x, w)
     end
     return new_pts
 end
-function sir(y,x_ip,Δ,obs_fun,Ny,σ_o,σ_d,N_thr=10)
+
+function sir(y,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
     K = size(y)[2]
     N_p = size(x_ip)[2]
     
     N_y = K*Δ
+	@show N_y
 	w_trj = zeros(N_p, N_y)
     x_trj = zeros(d, N_p, N_y)
 
@@ -39,11 +41,11 @@ function sir(y,x_ip,Δ,obs_fun,Ny,σ_o,σ_d,N_thr=10)
     w = ones(N_p)./N_p
     x = copy(x_ip)
 	count = 0
-	j = 0
+	j = 1
     for k = 1:N_y
         if k % Δ == 0
 		    for i = 1: N_p 
-                logwi = log(w[i]) + p_y_g_x(y[:,j] .- obs_fun(x[:,i],σ_o))
+                logwi = log(w[i]) + p_y_g_x(y[:,j] .- obs_fun(x[:,i],σ_o), σ_o)
                 w[i] = exp(logwi)
 			end
             w ./= sum(w)
@@ -83,13 +85,14 @@ Outputs:
 
 # Examples
 ```julia-repl
-julia> x, w = assimilate(500, 1000, 0.1, 0.1, 1, obs)
+julia> x, w = assimilate(500, 1000, 0.1, 0.1, 1, 10, obs)
 ```
 """
 function assimilate(K, Np, σ_o, σ_d, 
 				   Δ, Nth, obsfun)
     x = rand(d,Np)
 	Ny = K*Δ
+	
 	ytest = obsfun(rand(d),σ_o)
 	dy = size(ytest)[1]
     x_true = ones(d,Ny)
@@ -104,9 +107,9 @@ function assimilate(K, Np, σ_o, σ_d,
         end
     end
     x_true[:,1] .= x0_true
-    y = zeros(dy,Ny)
+    y = zeros(dy, K)
 	y[:,1] .= obsfun(x0_true, σ_o) 
-	k = 0
+	k = 1
     for i = 2:Ny
         x_true[:,i] = next(x_true[:,i-1], σ_d)
 		if i % Δ == 0
@@ -115,7 +118,7 @@ function assimilate(K, Np, σ_o, σ_d,
 		end
     end
     # store trajectory of w and x.
-    x_trj, w_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, N_th) 
+    x_trj, w_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, Nth) 
     return x_trj, w_trj, y 
 end
 
