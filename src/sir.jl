@@ -81,11 +81,12 @@ Outputs:
 
     1. `x`: orbit of particles. size: `dX x Np x (Δ K)`
 	2. `w`: orbit of weights. size: `Np x (Δ K)`
-	3. `y`: synthetic observations. size: `dY x K`  
+	3. `y`: synthetic observations. size: `dY x K` 
+	4. `x_true`: ``true'' orbit that generated the observations. size: `dX x (Δ K)` 
 
 # Examples
 ```julia-repl
-julia> x, w = assimilate(500, 1000, 0.1, 0.1, 1, 10, obs)
+julia> x, w, y, x_true = assimilate(500, 1000, 0.1, 0.1, 1, 10, obs)
 ```
 """
 function assimilate(K, Np, σ_o, σ_d, 
@@ -119,7 +120,7 @@ function assimilate(K, Np, σ_o, σ_d,
     end
     # store trajectory of w and x.
     x_trj, w_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, Nth) 
-    return x_trj, w_trj, y 
+    return x_trj, w_trj, y, x_true 
 end
 
 
