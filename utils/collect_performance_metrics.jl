@@ -9,7 +9,7 @@ function no_of_particles()
 	Nth = 500
 	obsfun = obs1
 	
-	Npts = 8
+	Npts = 20
 	Np = 100
 
 	trj_len = K*Δ
@@ -33,7 +33,7 @@ function no_of_particles()
 	    rmse .= sqrt.(rmse)/d
 	    mean_rmse[i] = sum(rmse[1:Δ:end])/K
 		Np_arr[i] = Np
-		Np = Np*2
+		Np = Np + 500
 	end
 	save("../data/mean_rmse_vs_Np.jld", "Np", Np_arr, "mean_rmse", mean_rmse) 
 end
