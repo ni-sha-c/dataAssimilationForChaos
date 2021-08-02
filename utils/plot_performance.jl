@@ -38,6 +38,10 @@ function plot_trj()
 		ax.set_title("# particles = $(Np), partial observation", fontsize=28)
 	end
 end
+function plot_rmse()
+
+
+end
 function plot_weight_stats()
 	fig, ax = subplots()
 	ax.grid(true)
