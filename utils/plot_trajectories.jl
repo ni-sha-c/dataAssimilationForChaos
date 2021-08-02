@@ -18,12 +18,14 @@ function plot_trj()
 		ax.grid(true)
 		ax.plot(time_arr, x_trj[n_t:end,:,i],"b",lw=0.9) 
 		ax.plot(time_arr, x_trj[n_t:end,end,i],"b",lw=0.9,label="\$ x^{($i)}\$ orbit of particle") 
-		ax.plot(time_arr, x_true[n_t:end,i],"k",lw=3.0,label="Observed \$ x^{($i)}\$")
+		if i==d
+			ax.plot(time_arr, x_true[n_t:end,1],"k",lw=3.0,label="Observed \$ x^{($i)}\$")
+		end
 		ax.legend(fontsize=28)
 		ax.xaxis.set_tick_params(labelsize=28)
 		ax.yaxis.set_tick_params(labelsize=28)
 		ax.set_xlabel("Time",fontsize=28)
-		ax.set_title("# particles = $(Np)", fontsize=28)
+		ax.set_title("# particles = $(Np), partial observation", fontsize=28)
 	end
 end
 function plot_weight_stats()

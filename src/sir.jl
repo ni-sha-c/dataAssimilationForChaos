@@ -58,12 +58,31 @@ function sir(y,x_ip,s,obs_fun,N_thr=10)
     end
     return x_trj, w_trj
 end
-function assimilate(K, Np)
-    # Often much larger.
-    #Np = 1000
-    #K = 1000
+"""
+    assimilate(K, Np, σ_o, σ_d, 
+				   Δ, Nth)
+
+Perform `K` data assimilation steps using an SIR algorithm with `Np` particles. Other inputs:
+
+    1. `σ_o`: std of Gaussian observation noise
+	2. `σ_d`: std of Gaussian dynamics noise, which is added to every component and at every timestep.
+	3. `Δ`: inter-observation number of timesteps, e.g., if `Δ = 5,` observations are assumed available at timestep `0,5,10,...,5(K-1)`.
+	4. `Nth`: number of particles below which to resample
+
+Outputs:
+
+    1. `x`: orbit of particles. size: `dX x Np x (Δ K)`
+	2. `w`: orbit of weights. size: `Np x (Δ K)`
+	3. `y`: synthetic observations. size: `dY x K`  
+
+# Examples
+```julia-repl
+julia> x, w = assimilate(500, 1000, 0.1, 0.1, 1)
+```
+"""
+function assimilate(K, Np, σ_o, σ_d, 
+				   Δ)
     x = rand(d,Np)
-    s = 0.
     x_true = ones(d,K)
     x0_true = rand(d)
     Nrunup = 2000
