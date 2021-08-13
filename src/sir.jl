@@ -119,8 +119,8 @@ function assimilate(K, Np, σ_o, σ_d,
 		end
     end
     # store trajectory of w and x.
-    x_trj, w_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, Nth) 
-    return x_trj, w_trj, y, x_true 
+    x_trj, rmse_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, Nth) 
+    return x_trj, rmse_trj, y
 end
 
 
