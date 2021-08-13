@@ -28,23 +28,25 @@ function resample(x, w)
     return new_pts
 end
 
-function sir(y,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
+function sir(y,x_t,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
     K = size(y)[2]
     N_p = size(x_ip)[2]
     
     N_y = K*Δ
 	@show N_y
-	w_trj = zeros(N_p, N_y)
-    x_trj = zeros(d, N_p, N_y)
-
+    rmse_trj = zeros(K)
 
     w = ones(N_p)./N_p
     x = copy(x_ip)
+	mean_x = zeros(d,K)    
+    j = 1
 	count = 0
-	j = 1
     for k = 1:N_y
         if k % Δ == 0
-		    for i = 1: N_p 
+			filter_mean = sum(x,dims=2)/d
+			rmse_trj[j] = norm(filter_mean - x_t[:,k])
+			j = j+1
+			for i = 1: N_p 
                 logwi = log(w[i]) + p_y_g_x(y[:,j] .- obs_fun(x[:,i],σ_o), σ_o)
                 w[i] = exp(logwi)
 			end
@@ -54,16 +56,14 @@ function sir(y,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
 				count = count + 1
 			    x .= resample(x, w)
 		    end
-			j = j + 1
+
 		end
         for i = 1:N_p
             x[:,i] .= next(x[:,i],σ_d)
         end
-        x_trj[:,:,k] .= x
-        w_trj[:,k] .= w
     end
 	@show "Resampling was triggered ", count, " times out of ", N_y
-    return x_trj, w_trj
+    return rmse_trj
 end
 """
     assimilate(K, Np, σ_o, σ_d, 
@@ -77,16 +77,14 @@ Perform `K` data assimilation steps using an SIR algorithm with `Np` particles. 
 	4. `Nth`: number of particles below which to resample
 	5. `obs`: observation map, e.g., `obs(x) = x[3]`
 
-Outputs:
+Output: 
 
-    1. `x`: orbit of particles. size: `dX x Np x (Δ K)`
-	2. `w`: orbit of weights. size: `Np x (Δ K)`
-	3. `y`: synthetic observations. size: `dY x K` 
-	4. `x_true`: ``true'' orbit that generated the observations. size: `dX x (Δ K)` 
+`mean_rmse`: Summary scalar performance metric: 
+    $$1/K \sum_{n=1}^{K} ||(filter mean)_k - (true orbit)_k||$$
 
 # Examples
 ```julia-repl
-julia> x, w, y, x_true = assimilate(500, 1000, 0.1, 0.1, 1, 10, obs)
+julia> rmse_avg = assimilate(500, 1000, 0.1, 0.1, 1, 10, obs)
 ```
 """
 function assimilate(K, Np, σ_o, σ_d, 
@@ -119,8 +117,9 @@ function assimilate(K, Np, σ_o, σ_d,
 		end
     end
     # store trajectory of w and x.
-    x_trj, rmse_trj = sir(y, x, Δ, obsfun, σ_o, σ_d, Nth) 
-    return x_trj, rmse_trj, y
+    rmse_trj = sir(y, x_true, x, Δ, obsfun, σ_o, σ_d, Nth)
+	mean_rmse = sum(rmse_trj)/K
+    return mean_rmse
 end
 
 
