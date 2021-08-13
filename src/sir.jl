@@ -36,9 +36,19 @@ function sir(y,x_t,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
     N_y = K*Δ
 	@show N_y
     rmse_trj = zeros(K)
+    N_runup = 3000
 
-    w = ones(N_p)./N_p
-    x = copy(x_ip)
+	w = SharedArray{Float64}(N_p)
+	w .= 1.0/N_p
+	x = SharedArray{Float64}(d,N_p)
+	t = @distributed for i=1:N_p
+		x[:,i] = rand(d)
+		for k = 1:N_runup
+			x[:,i] = next(x[:,i],s) 
+		end
+	end
+	wait(t)
+
 	mean_x = zeros(d,K)    
     j = 1
 	count = 0
@@ -47,7 +57,7 @@ function sir(y,x_t,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
 			filter_mean = sum(x,dims=2)/N_p
 			rmse_trj[j] = norm(filter_mean - x_t[:,k])/sqrt(d)
 
-			for i = 1: N_p 
+			t = @distributed for i = 1: N_p 
                 logwi = log(w[i]) + p_y_g_x(y[:,j] .- obs_fun(x[:,i],σ_o), σ_o)
                 w[i] = exp(logwi)
 			end
