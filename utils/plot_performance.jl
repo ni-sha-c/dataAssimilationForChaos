@@ -1,7 +1,7 @@
 using PyPlot
 using JLD
 function plot_rmse_vs_Np()
-    X = load("../data/mean_rmse_vs_Np.jld")
+    X = load("../data/mean_rmse_vs_Np_full.jld")
     Np = X["Np"]
 	mean_rmse = X["mean_rmse"]
 	fig, ax = subplots()

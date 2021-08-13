@@ -1,5 +1,6 @@
 include("../examples/lorenz.jl")
 using JLD
+using LinearAlgebra
 function p_y_g_x(a, σ_o)
         term =  log(1/sqrt(2π)/σ_o) 
         return sum(term .- 0.5*a.*a/σ_o/σ_o)
@@ -43,9 +44,9 @@ function sir(y,x_t,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
 	count = 0
     for k = 1:N_y
         if k % Δ == 0
-			filter_mean = sum(x,dims=2)/d
-			rmse_trj[j] = norm(filter_mean - x_t[:,k])
-			j = j+1
+			filter_mean = sum(x,dims=2)/N_p
+			rmse_trj[j] = norm(filter_mean - x_t[:,k])/sqrt(d)
+
 			for i = 1: N_p 
                 logwi = log(w[i]) + p_y_g_x(y[:,j] .- obs_fun(x[:,i],σ_o), σ_o)
                 w[i] = exp(logwi)
@@ -56,7 +57,7 @@ function sir(y,x_t,x_ip,Δ,obs_fun,σ_o,σ_d,N_thr=10)
 				count = count + 1
 			    x .= resample(x, w)
 		    end
-
+			j = j+1
 		end
         for i = 1:N_p
             x[:,i] .= next(x[:,i],σ_d)
@@ -80,7 +81,6 @@ Perform `K` data assimilation steps using an SIR algorithm with `Np` particles. 
 Output: 
 
 `mean_rmse`: Summary scalar performance metric: 
-    $$1/K \sum_{n=1}^{K} ||(filter mean)_k - (true orbit)_k||$$
 
 # Examples
 ```julia-repl
@@ -89,9 +89,7 @@ julia> rmse_avg = assimilate(500, 1000, 0.1, 0.1, 1, 10, obs)
 """
 function assimilate(K, Np, σ_o, σ_d, 
 				   Δ, Nth, obsfun)
-    x = rand(d,Np)
 	Ny = K*Δ
-	
 	ytest = obsfun(rand(d),σ_o)
 	dy = size(ytest)[1]
     x_true = ones(d,Ny)
@@ -99,11 +97,6 @@ function assimilate(K, Np, σ_o, σ_d,
     Nrunup = 2000
     for i = 1:Nrunup
         x0_true = next(x0_true, 0.0)
-    end
-    for i = 1:Nrunup
-        for j = 1:Np
-            x[:,j] = next(x[:,j],σ_d)
-        end
     end
     x_true[:,1] .= x0_true
     y = zeros(dy, K)
@@ -117,7 +110,7 @@ function assimilate(K, Np, σ_o, σ_d,
 		end
     end
     # store trajectory of w and x.
-    rmse_trj = sir(y, x_true, x, Δ, obsfun, σ_o, σ_d, Nth)
+    rmse_trj = sir(y, x_true, Δ, obsfun, σ_o, σ_d, Nth)
 	mean_rmse = sum(rmse_trj)/K
     return mean_rmse
 end
