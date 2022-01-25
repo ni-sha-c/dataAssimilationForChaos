@@ -17,19 +17,27 @@ function select_pts(v, ϵ, y, N)
 	return pts
 end
 function plot_pts(x)
-	 fig, ax = subplots()
+	fig, ax = subplots()
     ax.grid(true)
-    ax.plot(Np, mean_rmse, "bo--",lw=1.0,ms=20,label="RMSE") 
+	ax.plot(x[1,:], x[2,:], "bo", ms=20, label="RMSE") 
     ax.legend(fontsize=28)
-    ax.set_xlabel("# of particles", fontsize=28)
+	ax.set_xlabel("x^{(1)}", fontsize=28)
+	ax.set_xlabel("x^{(2)}", fontsize=28)
     ax.xaxis.set_tick_params(labelsize=28)
     ax.yaxis.set_tick_params(labelsize=28)
-
-
 end
-function plot_sample_orbits(x)
-    X = load("../data/mean_rmse_vs_Np_full.jld")
-    Np = X["Np"]
-    mean_rmse = X["mean_rmse"]
-   end
+function plot_sample_orbits(T, Δ)
+	v = [1.0, 0.0]
+	ϵ = 0.1
+	y = -1.0 .+ 2.0*rand(T)
+	x = rand(d, N)
+	for t = 1:T
+		plot_pts(x)
+		for t1 = 1:Δ
+			for k = 1:N
+				x[:,k] = next(x[:,k],0)
+			end
+		end
+	end
+end
 
