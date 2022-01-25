@@ -3,6 +3,7 @@ using JLD
 using LinearAlgebra
 include("../examples/cat.jl")
 # y = v1.x1 + v2.x2 + epsilon
+rot_mat = reshape([q[1], -q[2], q[2], q[1]], 2, 2)
 function select_pts(v, ϵ, y, N)
     npts = 0
 	pts = zeros(d,N)
@@ -13,7 +14,8 @@ function select_pts(v, ϵ, y, N)
 		if a > y - ϵ && a <  y + ϵ
 			npts += 1
 			pts[:,npts] = x
-			clrs[npts] = floor(Int64,x[2]/0.2)
+			xprime = rot_mat*x
+			clrs[npts] = floor(Int64,xprime[2]/0.1)
 		end
     end
 	return pts, clrs
@@ -22,14 +24,17 @@ function plot_pts(x, xtrue, clrs, str=" ")
 	fig, ax = subplots()
     ax.grid(true)
 	N = size(x)[2]
-	nclrarr = maximum(clrs)
+
+	clrs .+= abs(minimum(clrs))
+	nclrarr = maximum(clrs) 
+	
 	clrarr = get_cmap("tab10")
 	for i = 1:N
 		ax.plot(x[1,i], x[2,i], "o", color=clrarr(clrs[i]/nclrarr), 
 					ms=10) 
 	end
 
-	ax.plot(xtrue[1], xtrue[2], "r*", ms=30) 
+	ax.plot(xtrue[1], xtrue[2], "k*", ms=40) 
 	ax.set_title(string("truth, ", str), fontsize=32)
 	ax.set_xlabel(L"x^{(1)}", fontsize=32)
 	ax.set_ylabel(L"x^{(2)}", fontsize=32)
