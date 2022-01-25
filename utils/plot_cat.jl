@@ -6,21 +6,23 @@ include("../examples/cat.jl")
 function select_pts(v, ϵ, y, N)
     npts = 0
 	pts = zeros(d,N)
+	clrs = zeros(N)
     while npts < N
         x = rand(d)
 		a = dot(x,v)
 		if a > y - ϵ && a <  y + ϵ
 			npts += 1
 			pts[:,npts] = x
+			clrs[npts] = floor(Int64,x[2]/0.2)
 		end
     end
-	return pts
+	return pts, clrs
 end
 function plot_pts(x, xtrue, str=" ")
 	fig, ax = subplots()
     ax.grid(true)
-	ax.plot(x[1,:], x[2,:], "bo", ms=10, label=str) 
-	ax.plot(xtrue[1], xtrue[2], "r*", ms=20, label="truth") 
+	ax.plot(x[1,:], x[2,:], "ko", ms=10, label=str) 
+	ax.plot(xtrue[1], xtrue[2], "r*", ms=30, label="truth") 
     ax.legend(fontsize=32)
 	ax.set_xlabel(L"x^{(1)}", fontsize=32)
 	ax.set_ylabel(L"x^{(2)}", fontsize=32)
@@ -39,7 +41,7 @@ function plot_sample_orbits(N, T, Δ)
 		plot_pts(x, xtrue, string("t = ", t*Δ, ", forecast"))
 		r = -1.0 + 2*rand()
 		y = dot(v, xtrue) + ϵ*r
-		x = select_pts(v, ϵ, y, N)
+		x, clrs = select_pts(v, ϵ, y, N)
 		plot_pts(x, xtrue, string("t = ", t*Δ, ", analysis"))
 		for t1 = 1:Δ
 			xtrue = next(xtrue, 0)
