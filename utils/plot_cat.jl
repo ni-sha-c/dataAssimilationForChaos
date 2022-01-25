@@ -16,15 +16,16 @@ function select_pts(v, ϵ, y, N)
     end
 	return pts
 end
-function plot_pts(x, str=" ")
+function plot_pts(x, xtrue, str=" ")
 	fig, ax = subplots()
     ax.grid(true)
-	ax.plot(x[1,:], x[2,:], "bo", ms=20, label=str) 
-    ax.legend(fontsize=28)
-	ax.set_xlabel(L"x^{(1)}", fontsize=28)
-	ax.set_ylabel(L"x^{(2)}", fontsize=28)
-    ax.xaxis.set_tick_params(labelsize=28)
-    ax.yaxis.set_tick_params(labelsize=28)
+	ax.plot(x[1,:], x[2,:], "bo", ms=10, label=str) 
+	ax.plot(xtrue[1], xtrue[2], "r*", ms=20, label="truth") 
+    ax.legend(fontsize=32)
+	ax.set_xlabel(L"x^{(1)}", fontsize=32)
+	ax.set_ylabel(L"x^{(2)}", fontsize=32)
+    ax.xaxis.set_tick_params(labelsize=32)
+    ax.yaxis.set_tick_params(labelsize=32)
 	ax.set_xlim([0,1])
 	ax.set_ylim([0,1])
 
@@ -35,11 +36,11 @@ function plot_sample_orbits(N, T, Δ)
 	xtrue = rand(d)
 	x = rand(d, N)
 	for t = 1:T
-		plot_pts(x,string("t = ", t*Δ, ", forecast"))
+		plot_pts(x, xtrue, string("t = ", t*Δ, ", forecast"))
 		r = -1.0 + 2*rand()
 		y = dot(v, xtrue) + ϵ*r
 		x = select_pts(v, ϵ, y, N)
-		plot_pts(x,string("t = ", t*Δ, ", analysis"))
+		plot_pts(x, xtrue, string("t = ", t*Δ, ", analysis"))
 		for t1 = 1:Δ
 			xtrue = next(xtrue, 0)
 			for k = 1:N
