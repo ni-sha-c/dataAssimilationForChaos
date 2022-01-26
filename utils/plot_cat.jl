@@ -18,17 +18,22 @@ function put_pts(v, ϵ, y, N)
 			clrs[npts] = floor(Int64,xprime[2]/0.1)
 		end
     end
+
+	clrs .+= abs(minimum(clrs))
+	nclrarr = maximum(clrs) 
+    clrs ./= nclrarr
+
 	return pts, clrs
 end
 function select_pts(v, ϵ, y, x, clrs)
     npts = 0
-	N = size(clrs)
+	N = size(clrs)[1]
 	a = zeros(N)
     for i = 1:N
-		a = dot(x[:,i],v)
+		a[i] = dot(x[:,i],v)
 	end
-	sel = (a .> y - ϵ) && (a .< y + ϵ)
-    return x[sel], clrs[sel]
+	sel = (y + ϵ .> a .> y - ϵ)
+    return x[:,sel], clrs[sel]
 end
 
 function plot_pts(x, xtrue, clrs, str=" ")
@@ -36,12 +41,12 @@ function plot_pts(x, xtrue, clrs, str=" ")
     ax.grid(true)
 	N = size(x)[2]
 
-	clrs .+= abs(minimum(clrs))
-	nclrarr = maximum(clrs) 
+
+
 	
 	clrarr = get_cmap("tab10")
 	for i = 1:N
-		ax.plot(x[1,i], x[2,i], "o", color=clrarr(clrs[i]/nclrarr), 
+			ax.plot(x[1,i], x[2,i], "o", color=clrarr(clrs[i]), 
 					ms=10) 
 	end
 
@@ -56,13 +61,13 @@ function plot_pts(x, xtrue, clrs, str=" ")
 
 end
 function plot_sample_orbits(N, T, Δ)
-	v = [1.0, 0.0]
+	v = [0, 1.0]
 	ϵ = 0.1
 	xtrue = rand(d)
 	r = -1.0 + 2*rand()
 	y = dot(v, xtrue) + ϵ*r
 	x, clrs = put_pts(v, ϵ, y, N)
-	plot_pts(x, xtrue, clrs, string("t = ", t*Δ, ", analysis"))
+	plot_pts(x, xtrue, clrs, string("t = ", Δ, ", analysis"))
 
 
     n = N
