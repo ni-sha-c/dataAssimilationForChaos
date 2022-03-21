@@ -4,6 +4,8 @@ using LinearAlgebra
 include("../examples/cat.jl")
 # y = v1.x1 + v2.x2 + epsilon
 rot_mat = reshape([q[1], -q[2], q[2], q[1]], 2, 2)
+# deterministic perturbation to the Cat map
+sn = 0.75
 function put_pts(v, ϵ, y, N)
     npts = 0
 	pts = zeros(d,N)
@@ -61,7 +63,8 @@ function plot_pts(x, xtrue, clrs, str=" ")
 
 end
 function plot_sample_orbits(N, T, Δ)
-	v = [0, 1.0]
+	v = -1.0 .+ 2.0*rand(d)
+	v ./= norm(v)
 	ϵ = 0.1
 	xtrue = rand(d)
 	r = -1.0 + 2*rand()
@@ -73,10 +76,10 @@ function plot_sample_orbits(N, T, Δ)
     n = N
 	for t = 1:T
 		for t1 = 1:Δ
-			xtrue = next(xtrue, 0)
+			xtrue = next(xtrue, sn)
 			n = size(x)[2]
 			for k = 1:n
-				x[:,k] = next(x[:,k],0)
+				x[:,k] = next(x[:,k],sn)
 			end
 		end
         plot_pts(x, xtrue, clrs, string("t = ", t*Δ, ", forecast"))
