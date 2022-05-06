@@ -5,7 +5,7 @@ function no_of_particles()
 	K = 50
 	σ_o = 0.1
 	σ_d = 0.0
-	Δ = 5
+	Δ = 1
 	Nth = 500
 	obsfun = obs
 	
@@ -19,14 +19,14 @@ function no_of_particles()
 	for i = 1:Npts
 	   @show Np
 	   mean_rmse[i] = assimilate(K, Np, 
-							σ_o, σ_d,
+							σ_o, σ_d, s,
 							Δ, Nth, 
 							obsfun)
 
 	   Np_arr[i] = Np
 	   Np = Np + 500
 	end
-	save("../data/mean_rmse_vs_Np_full.jld", "Np", Np_arr, "mean_rmse", mean_rmse) 
+	save("../data/baker_mean_rmse_vs_Np.jld", "Np", Np_arr, "mean_rmse", mean_rmse) 
 end
 
 
